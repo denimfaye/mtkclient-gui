@@ -1,4 +1,14 @@
-import os, sys, time, curses, requests, tempfile, platform, subprocess, zipfile, shutil
+import os
+import sys
+import time
+import curses
+import requests
+import tempfile
+import platform
+import subprocess
+import zipfile
+import shutil
+from unittest import FunctionTestCase
 from cursesmenu import *
 from cursesmenu.items import *
 
@@ -8,16 +18,19 @@ curses.initscr()
 
 exited = False
 
+
 def exit_curses():
     curses.endwin()
     clear_terminal()
+
 
 def download_and_install_usbdk():
     exit_curses()
 
     found = False
 
-    usbdk_latest = requests.get("https://api.github.com/repos/daynix/UsbDk/releases").json()[0]
+    usbdk_latest = requests.get(
+        "https://api.github.com/repos/daynix/UsbDk/releases").json()[0]
     for asset in usbdk_latest["assets"]:
         if platform.machine().endswith("64") and "x64" in asset["name"]:
             found = True
@@ -50,6 +63,7 @@ def download_and_install_usbdk():
 
     shutil.rmtree(tempdir)
 
+
 def cancel_usbdk():
     global exited
 
@@ -58,6 +72,7 @@ def cancel_usbdk():
     print("Sorry but mtkclient-gui cant work without UsbDk, the program will exit now.")
     time.sleep(3)
     exited = True
+
 
 def unlock_bootloader():
     exit_curses()
@@ -69,6 +84,7 @@ def unlock_bootloader():
         subprocess.call(f"{runtime} mtkclient/mtk da seccfg unlock")
         input("Press Enter to continue")
 
+
 def lock_bootloader():
     exit_curses()
 
@@ -78,6 +94,7 @@ def lock_bootloader():
         clear_terminal()
         subprocess.call(f"{runtime} mtkclient/mtk da seccfg lock")
         input("Press Enter to continue")
+
 
 def bypass_sla_daa():
     exit_curses()
@@ -89,6 +106,7 @@ def bypass_sla_daa():
         subprocess.call(f"{runtime} mtkclient/mtk payload")
         input("Press Enter to continue")
 
+
 if os.name == "nt":
     while not os.path.exists("C:\\Program Files\\UsbDk Runtime Library") and not os.path.exists("C:\\Program Files (x86)\\UsbDk Runtime Library"):
         if exited:
@@ -96,8 +114,10 @@ if os.name == "nt":
 
         exit_curses()
 
-        menu = CursesMenu("UsbDk not found", "Do you want me to download and install UsbDk for you?", show_exit_option=False)
-        menu.append_item(FunctionItem("Yes", download_and_install_usbdk, should_exit=True))
+        menu = CursesMenu(
+            "UsbDk not found", "Do you want me to download and install UsbDk for you?", show_exit_option=False)
+        menu.append_item(FunctionItem(
+            "Yes", download_and_install_usbdk, should_exit=True))
         menu.append_item(FunctionItem("No", cancel_usbdk, should_exit=True))
         menu.show()
 
@@ -108,7 +128,8 @@ while not os.path.exists("mtkclient"):
 
     f = open(f"{tempdir}/mtkclient.zip", "wb")
 
-    stream = requests.get("https://github.com/bkerler/mtkclient/archive/refs/heads/main.zip", stream=True, allow_redirects=True)
+    stream = requests.get(
+        "https://github.com/bkerler/mtkclient/archive/refs/heads/main.zip", stream=True, allow_redirects=True)
 
     print("Downloading mtkclient")
     for chunk in stream.iter_content(chunk_size=512):
@@ -127,5 +148,5 @@ menu = CursesMenu("mtkclient-gui", "Choose an action.", show_exit_option=False)
 menu.append_item(FunctionItem("Unlock bootloader", unlock_bootloader))
 menu.append_item(FunctionItem("Lock bootloader", lock_bootloader))
 menu.append_item(FunctionItem("Bypass SLA/DAA", bypass_sla_daa))
-menu.append_item(FunctionItem("Exit", exit_curses, should_exit=True))
+menu.append_item(FunctionTestCase("Exit", exit_curses, should_exit=True))
 menu.show()
